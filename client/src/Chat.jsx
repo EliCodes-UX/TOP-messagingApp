@@ -4,6 +4,7 @@ import Avatar from './Avatar';
 import Logo from './Logo';
 import { UserContext } from './UserContext';
 import { uniqBy } from 'lodash';
+import axios from 'axios';
 
 export default function Chat() {
   const [ws, setWs] = useState(null);
@@ -65,6 +66,12 @@ export default function Chat() {
       div.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (seletedUserId) {
+      axios.get('/messages/' + seletedUserId).then();
+    }
+  }, [seletedUserId]);
 
   const onlinePeopleExclOurUser = { ...onlinePeople };
   delete onlinePeopleExclOurUser[id];
