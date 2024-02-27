@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
+const ws = require('ws');
 
 mongoose.connect(process.env.MONGO_URL);
 const jwtSecret = process.env.JWT_SECRET;
@@ -88,6 +89,40 @@ app.post('/register', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend server is running on http://localhost:${PORT}`);
+const server = app.listen(PORT);
+
+const wss = new ws.WebSocketServer({ server });
+console.log('connected');
+wss.on('connection', (connection, req) => {
+  const cookies = req.headers.cookie;
+  if (cookies) {
+    const tokenCookieString = cookies
+      .split(';')
+      .find(str => str.startsWith('token='));
+    if (tokenCookieString) {
+      const token = tokenCookieString.split('=')[1];
+      if (token) {
+        jwt.verify(token, jwtSecret, {}, (err, userData) => {
+          if (err) throw err;
+          const { userId, username } = userData;
+          connection.userId = userId;
+          connection.username = username;
+        });
+      }
+    }
+  }
+  [...wss.clients].forEach(client => {
+    client.send(
+      JSON.stringify(
+        {
+          online: [...wss.clients].map(c => ({
+            userId: c.userId,
+            username: c.username,
+          })),
+        }
+        // [...wss.clients].map(c => ({ userId: c.userId, username: c.username }))
+      )
+    );
+  });
+  console.log([...wss.clients].map(c => c.username));
 });

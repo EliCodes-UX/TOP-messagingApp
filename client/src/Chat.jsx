@@ -1,6 +1,28 @@
 // import sendArrow from './assets/send-arrow.svg';
+import { useEffect, useState } from 'react';
 
 export default function Chat() {
+  const [ws, setWs] = useState(null);
+  useEffect(() => {
+    const ws = new WebSocket('ws://localhost:9040');
+    setWs(ws);
+    ws.addEventListener('message', handleMessage);
+  }, []);
+
+  function showOnlinePeople(peopleArray) {
+    // const people = new Set();
+    // peopleArray.forEach(person => {
+    //   people.add(person);
+    // });
+    console.log(people);
+  }
+  function handleMessage(ev) {
+    const messageData = JSON.parse(ev.data);
+    if ('online' in messageData) {
+      showOnlinePeople(messageData.online);
+    }
+    console.log(messageData);
+  }
   return (
     <div className='flex h-screen'>
       <div className='bg-white w-1/3'>contacts</div>
