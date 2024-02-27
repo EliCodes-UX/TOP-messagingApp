@@ -5,11 +5,13 @@ import Logo from './Logo';
 import { UserContext } from './UserContext';
 import { uniqBy } from 'lodash';
 import axios from 'axios';
+import Contact from './Contact';
 
 export default function Chat() {
   const [ws, setWs] = useState(null);
   const [onlinePeople, setOnlinePeople] = useState({});
-  const [seletedUserId, setSeletedUserId] = useState(null);
+  const [offlinePeople, setOfflinePeople] = useState({});
+  const [selectedUserId, setSelectedUserId] = useState(null);
   const [newMessageText, setUseMessageText] = useState('');
   const [messages, setMessages] = useState([]);
   const { username, id } = useContext(UserContext);
@@ -54,7 +56,7 @@ export default function Chat() {
 
     ws.send(
       JSON.stringify({
-        recipient: seletedUserId,
+        recipient: selectedUserId,
         text: newMessageText,
       })
     );
@@ -64,7 +66,7 @@ export default function Chat() {
       {
         text: newMessageText,
         sender: id,
-        recipient: seletedUserId,
+        recipient: selectedUserId,
         _id: Date.now(),
       },
     ]);
@@ -78,12 +80,25 @@ export default function Chat() {
   }, [messages]);
 
   useEffect(() => {
-    if (seletedUserId) {
-      axios.get('/messages/' + seletedUserId).then(res => {
+    axios.get('/people').then(res => {
+      const offlinePeopleArr = res.data
+        .filter(p => p._id !== id)
+        .filter(p => !Object.keys(onlinePeople).includes(p._id));
+      const offlinePeople = {};
+      offlinePeopleArr.forEach(p => {
+        offlinePeople[p._id] = p;
+      });
+      setOfflinePeople(offlinePeople);
+    });
+  }, [onlinePeople]);
+
+  useEffect(() => {
+    if (selectedUserId) {
+      axios.get('/messages/' + selectedUserId).then(res => {
         setMessages(res.data);
       });
     }
-  }, [seletedUserId]);
+  }, [selectedUserId]);
 
   const onlinePeopleExclOurUser = { ...onlinePeople };
   delete onlinePeopleExclOurUser[id];
@@ -96,32 +111,37 @@ export default function Chat() {
         <Logo />
 
         {Object.keys(onlinePeopleExclOurUser).map(userId => (
-          <div
+          <Contact
             key={userId}
-            onClick={() => setSeletedUserId(userId)}
-            className={
-              'border-b border-gray-100  flex items-center gap-2 cursor-pointer ' +
-              (userId === seletedUserId ? 'bg-blue-200' : '')
-            }
-          >
-            {userId === seletedUserId && (
-              <div className='w-1 bg-blue-500 h-12 rounded-r-md'></div>
-            )}
-            <div className='flex gap-2 py-2 pl-4 items-center'>
-              <Avatar username={onlinePeople[userId]} userId={userId} />
-              <span className='text-gray-800'>{onlinePeople[userId]}</span>
-            </div>
-          </div>
+            id={userId}
+            online={true}
+            username={onlinePeopleExclOurUser[userId]}
+            onClick={() => {
+              setSelectedUserId(userId);
+              console.log({ userId });
+            }}
+            selected={userId === selectedUserId}
+          />
+        ))}
+        {Object.keys(offlinePeople).map(userId => (
+          <Contact
+            key={userId}
+            id={userId}
+            online={false}
+            username={offlinePeople[userId].username}
+            onClick={() => setSelectedUserId(userId)}
+            selected={userId === selectedUserId}
+          />
         ))}
       </div>
       <div className='bg-blue-300 w-2/3 flex flex-col'>
         <div className='flex-grow'>
-          {!seletedUserId && (
+          {!selectedUserId && (
             <div className='flex h-full items-center justify-center'>
               <div className='text-gray-800'>&larr; select from sidebar</div>
             </div>
           )}
-          {!!seletedUserId && (
+          {!!selectedUserId && (
             <div className='relative h-full'>
               <div className='overflow-y-scroll absolute top-0 left-0 right-0 bottom-2'>
                 {messagesWithoutDupes.map(message => (
@@ -148,7 +168,7 @@ export default function Chat() {
             </div>
           )}
         </div>
-        {!!seletedUserId && (
+        {!!selectedUserId && (
           <form className='flex gap-2 p-2' onSubmit={sendMessage}>
             <input
               type='text'
