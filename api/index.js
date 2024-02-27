@@ -111,6 +111,12 @@ wss.on('connection', (connection, req) => {
       }
     }
   }
+
+  // connection.oon('message', (message)=>{
+  //   console.log(message)
+  // })
+
+  //  notify people about online people
   [...wss.clients].forEach(client => {
     client.send(
       JSON.stringify(
