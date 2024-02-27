@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 export default function Chat() {
   const [ws, setWs] = useState(null);
+  const [onlinePeople, setOnlinePeople] = useState({});
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:9040');
     setWs(ws);
@@ -14,6 +15,10 @@ export default function Chat() {
     // peopleArray.forEach(person => {
     //   people.add(person);
     // });
+    const people = {};
+    peopleArray.forEach(({ userId, username }) => {
+      people[userId] = username;
+    });
     console.log(people);
   }
   function handleMessage(ev) {
@@ -25,7 +30,11 @@ export default function Chat() {
   }
   return (
     <div className='flex h-screen'>
-      <div className='bg-white w-1/3'>contacts</div>
+      <div className='bg-white w-1/3'>
+        {Object.keys(onlinePeople).map(userId => (
+          <div>{onlinePeople[userId]}</div>
+        ))}
+      </div>
       <div className='bg-blue-300 w-2/3 flex flex-col'>
         <div className='flex-grow'>messages with selected person</div>
         <div className='flex gap-2 p-2'>
