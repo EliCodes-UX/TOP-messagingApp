@@ -29,7 +29,7 @@ export default function Chat() {
   }
   function handleMessage(ev) {
     const messageData = JSON.parse(ev.data);
-    console.log(ev, messageData);
+    console.log({ ev, messageData });
     if ('online' in messageData) {
       showOnlinePeople(messageData.online);
     } else if ('text' in messageData) {
@@ -47,13 +47,21 @@ export default function Chat() {
       })
     );
     setUseMessageText('');
-    setMessages(prev => [...prev, { text: newMessageText, isOur: true }]);
+    setMessages(prev => [
+      ...prev,
+      {
+        text: newMessageText,
+        sender: id,
+        recipient: seletedUserId,
+        id: Date.now(),
+      },
+    ]);
   }
 
   const onlinePeopleExclOurUser = { ...onlinePeople };
   delete onlinePeopleExclOurUser[id];
 
-  const messagesWithoutDupes = uniqBy(messages, '_id');
+  const messagesWithoutDupes = uniqBy(messages, 'id');
 
   return (
     <div className='flex h-screen'>
@@ -87,11 +95,25 @@ export default function Chat() {
             </div>
           )}
           {!!seletedUserId && (
-            <div>
+            <div className='overflow-y-scroll'>
               {messagesWithoutDupes.map(message => (
-                <div>
-                  {message.sender === id ? 'ME:' : ''}
-                  {message.text}
+                <div
+                  className={message.sender === id ? 'text-right' : 'text-left'}
+                >
+                  <div
+                    // key={message._id}
+                    className={
+                      'text-left inline-block p-2 m-2 rounded-md text-sm ' +
+                      (message.sender === id
+                        ? 'bg-blue-700 text-white'
+                        : 'bg-white text-blue-500')
+                    }
+                  >
+                    sender:{message.sender}
+                    <br />
+                    my id: {id} <br />
+                    {message.text}
+                  </div>
                 </div>
               ))}
             </div>
