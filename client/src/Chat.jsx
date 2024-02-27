@@ -15,11 +15,21 @@ export default function Chat() {
   const { username, id } = useContext(UserContext);
   const divUnderMessages = useRef();
   useEffect(() => {
+    connectToWs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function connectToWs() {
     const ws = new WebSocket('ws://localhost:9040');
     setWs(ws);
     ws.addEventListener('message', handleMessage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    ws.addEventListener('close', () => {
+      setTimeout(() => {
+        console.log('disconnected');
+        connectToWs();
+      }, 1000);
+    });
+  }
 
   function showOnlinePeople(peopleArray) {
     const people = {};
@@ -55,7 +65,7 @@ export default function Chat() {
         text: newMessageText,
         sender: id,
         recipient: seletedUserId,
-        id: Date.now(),
+        _id: Date.now(),
       },
     ]);
   }
@@ -69,14 +79,16 @@ export default function Chat() {
 
   useEffect(() => {
     if (seletedUserId) {
-      axios.get('/messages/' + seletedUserId).then();
+      axios.get('/messages/' + seletedUserId).then(res => {
+        setMessages(res.data);
+      });
     }
   }, [seletedUserId]);
 
   const onlinePeopleExclOurUser = { ...onlinePeople };
   delete onlinePeopleExclOurUser[id];
 
-  const messagesWithoutDupes = uniqBy(messages, 'id');
+  const messagesWithoutDupes = uniqBy(messages, '_id');
 
   return (
     <div className='flex h-screen'>
@@ -114,12 +126,12 @@ export default function Chat() {
               <div className='overflow-y-scroll absolute top-0 left-0 right-0 bottom-2'>
                 {messagesWithoutDupes.map(message => (
                   <div
+                    key={message._id}
                     className={
                       message.sender === id ? 'text-right' : 'text-left'
                     }
                   >
                     <div
-                      // key={message._id}
                       className={
                         'text-left inline-block p-2 m-2 rounded-md text-sm ' +
                         (message.sender === id
@@ -127,9 +139,6 @@ export default function Chat() {
                           : 'bg-white text-blue-500')
                       }
                     >
-                      sender:{message.sender}
-                      <br />
-                      my id: {id} <br />
                       {message.text}
                     </div>
                   </div>
