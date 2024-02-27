@@ -3,12 +3,14 @@ import { useContext, useEffect, useState } from 'react';
 import Avatar from './Avatar';
 import Logo from './Logo';
 import { UserContext } from './UserContext';
+import { uniqBy } from 'lodash';
 
 export default function Chat() {
   const [ws, setWs] = useState(null);
   const [onlinePeople, setOnlinePeople] = useState({});
   const [seletedUserId, setSeletedUserId] = useState(null);
-  const [newMessageText, setUseMessageText] = useState(null);
+  const [newMessageText, setUseMessageText] = useState('');
+  const [messages, setMessages] = useState([]);
   const { username, id } = useContext(UserContext);
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:9040');
@@ -27,27 +29,31 @@ export default function Chat() {
   }
   function handleMessage(ev) {
     const messageData = JSON.parse(ev.data);
+    console.log(ev, messageData);
     if ('online' in messageData) {
       showOnlinePeople(messageData.online);
+    } else if ('text' in messageData) {
+      setMessages(prev => [...prev, { ...messageData }]);
     }
-    console.log(messageData);
   }
 
   function sendMessage(ev) {
     ev.preventDefault();
-    console.log('sending');
+
     ws.send(
       JSON.stringify({
-        message: {
-          recipient: seletedUserId,
-          text: newMessageText,
-        },
+        recipient: seletedUserId,
+        text: newMessageText,
       })
     );
+    setUseMessageText('');
+    setMessages(prev => [...prev, { text: newMessageText, isOur: true }]);
   }
 
   const onlinePeopleExclOurUser = { ...onlinePeople };
   delete onlinePeopleExclOurUser[id];
+
+  const messagesWithoutDupes = uniqBy(messages, '_id');
 
   return (
     <div className='flex h-screen'>
@@ -78,6 +84,16 @@ export default function Chat() {
           {!seletedUserId && (
             <div className='flex h-full items-center justify-center'>
               <div className='text-gray-800'>&larr; select from sidebar</div>
+            </div>
+          )}
+          {!!seletedUserId && (
+            <div>
+              {messagesWithoutDupes.map(message => (
+                <div>
+                  {message.sender === id ? 'ME:' : ''}
+                  {message.text}
+                </div>
+              ))}
             </div>
           )}
         </div>

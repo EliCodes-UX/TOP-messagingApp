@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
+const Message = require('./models/message');
 const ws = require('ws');
 
 mongoose.connect(process.env.MONGO_URL);
@@ -63,9 +64,9 @@ app.post('/login', async (req, res) => {
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
   try {
-    const hashedPassword = bcrypt.hashSync(password);
+    const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
     const createdUser = await User.create({
-      username,
+      username: username,
       password: hashedPassword,
     });
     jwt.sign(
@@ -79,7 +80,6 @@ app.post('/register', async (req, res) => {
           .status(201)
           .json({
             id: createdUser._id,
-            username,
           });
       }
     );
@@ -94,6 +94,7 @@ const server = app.listen(PORT);
 const wss = new ws.WebSocketServer({ server });
 console.log('connected');
 wss.on('connection', (connection, req) => {
+  // read username and id
   const cookies = req.headers.cookie;
   if (cookies) {
     const tokenCookieString = cookies
@@ -112,23 +113,39 @@ wss.on('connection', (connection, req) => {
     }
   }
 
-  // connection.oon('message', (message)=>{
-  //   console.log(message)
-  // })
+  connection.on('message', async message => {
+    messageData = JSON.parse(message.toString());
+    const { recipient, text } = messageData;
+    if (recipient && text) {
+      const messageDoc = await Message.create({
+        sender: connection.userId,
+        recipient,
+        text,
+      });
+      [...wss.clients]
+        .filter(c => c.userId === recipient)
+        .forEach(c =>
+          c.send(
+            JSON.stringify({
+              text,
+              sender: connection.userId,
+              recipient,
+              id: messageDoc._id,
+            })
+          )
+        );
+    }
+  });
 
   //  notify people about online people
   [...wss.clients].forEach(client => {
     client.send(
-      JSON.stringify(
-        {
-          online: [...wss.clients].map(c => ({
-            userId: c.userId,
-            username: c.username,
-          })),
-        }
-        // [...wss.clients].map(c => ({ userId: c.userId, username: c.username }))
-      )
+      JSON.stringify({
+        online: [...wss.clients].map(c => ({
+          userId: c.userId,
+          username: c.username,
+        })),
+      })
     );
   });
-  console.log([...wss.clients].map(c => c.username));
 });
