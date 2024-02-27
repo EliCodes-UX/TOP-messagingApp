@@ -1,5 +1,5 @@
 // import sendArrow from './assets/send-arrow.svg';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import Avatar from './Avatar';
 import Logo from './Logo';
 import { UserContext } from './UserContext';
@@ -12,6 +12,7 @@ export default function Chat() {
   const [newMessageText, setUseMessageText] = useState('');
   const [messages, setMessages] = useState([]);
   const { username, id } = useContext(UserContext);
+  const divUnderMessages = useRef();
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:9040');
     setWs(ws);
@@ -58,6 +59,13 @@ export default function Chat() {
     ]);
   }
 
+  useEffect(() => {
+    const div = divUnderMessages.current;
+    if (div) {
+      div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [messages]);
+
   const onlinePeopleExclOurUser = { ...onlinePeople };
   delete onlinePeopleExclOurUser[id];
 
@@ -96,7 +104,7 @@ export default function Chat() {
           )}
           {!!seletedUserId && (
             <div className='relative h-full'>
-              <div className='overflow-y-scroll absolute inset-0'>
+              <div className='overflow-y-scroll absolute top-0 left-0 right-0 bottom-2'>
                 {messagesWithoutDupes.map(message => (
                   <div
                     className={
@@ -119,6 +127,7 @@ export default function Chat() {
                     </div>
                   </div>
                 ))}
+                <div className='h-12' ref={divUnderMessages}></div>
               </div>
             </div>
           )}
