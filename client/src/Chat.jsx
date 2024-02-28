@@ -22,7 +22,7 @@ export default function Chat() {
   }, []);
 
   function connectToWs() {
-    const ws = new WebSocket('//top-messagingapp-api.onrender.com');
+    const ws = new WebSocket('wss://top-messagingapp-api.onrender.com');
     setWs(ws);
     ws.addEventListener('message', handleMessage);
     ws.addEventListener('close', () => {
