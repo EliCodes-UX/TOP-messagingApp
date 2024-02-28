@@ -125,7 +125,9 @@ app.post('/register', async (req, res) => {
   }
 });
 
-const server = app.listen('https://top-messagingapp-api.onrender.com');
+const server = app.listen(PORT, () => {
+  const address = server.address();
+});
 
 const wss = new ws.WebSocketServer({ server });
 console.log('connected');
