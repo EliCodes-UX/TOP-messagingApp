@@ -3,7 +3,7 @@ import { UserContextProvider } from './UserContext';
 import Routes from './Routes';
 
 function App() {
-  axios.defaults.baseURL = 'http://localhost:9040';
+  axios.defaults.baseURL = 'https://top-messagingapp-api.onrender.com/';
   axios.defaults.withCredentials = true;
 
   return (
