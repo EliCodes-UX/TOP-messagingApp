@@ -97,6 +97,7 @@ export default function Chat() {
       });
       setOfflinePeople(offlinePeople);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onlinePeople]);
 
   useEffect(() => {
