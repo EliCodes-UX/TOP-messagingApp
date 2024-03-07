@@ -16,7 +16,7 @@ export default function RegisterAndLoginForm() {
   }
   return (
     <div className='bg-blue-50 h-screen flex flex-col items-center mt-48'>
-      <h1 className='text-blue-600 font-bold text-lg'>
+      <h1 className='text-blue-600 font-bold text-lg m-14'>
         Welcome to MernMessages
       </h1>
       <form className='w-64 mx-auto mb-12' onSubmit={handleSubmit}>
