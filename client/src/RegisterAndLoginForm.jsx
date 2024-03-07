@@ -15,8 +15,10 @@ export default function RegisterAndLoginForm() {
     setId(data.id);
   }
   return (
-    <div className='bg-blue-50 h-screen flex items-center'>
-      <h1 className='text-blue-600 font-bold'>Welcome to MernMessages</h1>
+    <div className='bg-blue-50 h-screen flex flex-col items-center'>
+      <h1 className='text-blue-600 font-bold text-lg'>
+        Welcome to MernMessages
+      </h1>
       <form className='w-64 mx-auto mb-12' onSubmit={handleSubmit}>
         <input
           value={username}
