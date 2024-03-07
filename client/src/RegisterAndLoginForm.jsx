@@ -15,7 +15,7 @@ export default function RegisterAndLoginForm() {
     setId(data.id);
   }
   return (
-    <div className='bg-blue-50 h-screen flex flex-col items-center'>
+    <div className='bg-blue-50 h-screen flex flex-col items-center mt-48'>
       <h1 className='text-blue-600 font-bold text-lg'>
         Welcome to MernMessages
       </h1>
